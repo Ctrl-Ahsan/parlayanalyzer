@@ -22,19 +22,27 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Development Server**: Running on http://localhost:3000
 - ✅ **Dependencies**: All packages properly installed and configured
 - ✅ **Build System**: PostCSS and Tailwind compilation working
+- ✅ **NFL Data Pipeline**: Python scripts for data collection implemented
+- ✅ **Data Architecture**: Hybrid approach designed (static data in frontend, weekly stats in database)
 
 ## Project Structure
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── globals.css        # Tailwind + shadcn/ui styles
-│   ├── layout.tsx         # Root layout with Inter font
-│   └── page.tsx           # Home page with demo UI
-├── components/
-│   └── ui/
-│       └── button.tsx     # shadcn/ui button component
-└── lib/
-    └── utils.ts           # Utility functions (cn helper)
+parlayanalyzer/
+├── src/                    # Next.js application
+│   ├── app/               # Next.js App Router
+│   │   ├── globals.css    # Tailwind + shadcn/ui styles
+│   │   ├── layout.tsx     # Root layout with Inter font
+│   │   └── page.tsx       # Home page with demo UI
+│   ├── components/         # React components
+│   │   └── ui/
+│   │       └── button.tsx # shadcn/ui button component
+│   └── lib/
+│       ├── utils.ts       # Utility functions (cn helper)
+│       └── data/          # Static NFL data (teams, rosters, schedule)
+├── scripts/                # Python data collection scripts
+│   ├── requirements.txt   # Python dependencies
+│   ├── update_static_data.py    # Downloads teams, rosters, schedule (weekly)
+│   └── update_weekly_stats.py   # Downloads weekly player stats (daily)
 ```
 
 ## Sports Support
@@ -52,6 +60,25 @@ Simple bet slip-like display showing:
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+
+## Python Data Scripts
+
+### **Setup:**
+```bash
+cd scripts
+pip install -r requirements.txt
+```
+
+### **Scripts:**
+- **`update_static_data.py`**: Downloads teams, rosters, schedule data
+  - Runs weekly during NFL season
+  - Saves data to `src/lib/data/` as JavaScript files
+  - Creates: `teams.js`, `rosters.js`, `schedule.js`
+
+- **`update_weekly_stats.py`**: Downloads weekly player performance data
+  - Runs daily during NFL season
+  - Will save to Supabase database (when implemented)
+  - Currently saves to temporary CSV files
 
 ---
 

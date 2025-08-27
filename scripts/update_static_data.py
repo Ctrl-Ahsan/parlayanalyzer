@@ -45,22 +45,7 @@ def download_teams_data():
         logger.error(f"Error downloading teams data: {e}")
         return None
 
-def download_players_data():
-    """Download players data."""
-    try:
-        logger.info("Downloading players data...")
-        players_data = nfl.import_players()
-        
-        if not players_data.empty:
-            logger.info(f"Successfully downloaded players data: {len(players_data)} players")
-            return players_data
-        else:
-            logger.warning("No players data available")
-            return None
-            
-    except Exception as e:
-        logger.error(f"Error downloading players data: {e}")
-        return None
+
 
 def download_rosters_data(season):
     """Download rosters data for the specified season."""
@@ -96,38 +81,39 @@ def download_schedule_data(season):
         logger.error(f"Error downloading schedule data for {season}: {e}")
         return None
 
-def update_database(teams_data, players_data, rosters_data, schedule_data, season):
-    """Update the database with new static data."""
-    # TODO: Implement database update logic
-    # This will connect to Supabase and update the teams, players, rosters, and schedules tables
+def save(teams_data, rosters_data, schedule_data, season):
+    """Save static data to lib/data folder as JavaScript files."""
+    # Create lib/data directory if it doesn't exist
+    lib_data_dir = Path("../src/lib/data")
+    lib_data_dir.mkdir(parents=True, exist_ok=True)
     
-    logger.info("Would update database with static data:")
-    logger.info(f"  Teams: {len(teams_data) if teams_data is not None else 0}")
-    logger.info(f"  Players: {len(players_data) if players_data is not None else 0}")
-    logger.info(f"  Rosters: {len(rosters_data) if rosters_data is not None else 0}")
-    logger.info(f"  Schedule: {len(schedule_data) if schedule_data is not None else 0}")
-    logger.info("Database update not yet implemented - need Supabase setup")
+    logger.info(f"Saving static data to {lib_data_dir.absolute()}")
     
-    # For now, just save to temporary files to verify data
+    # Save teams data
     if teams_data is not None:
-        temp_file = Path(f"temp_teams.csv")
-        teams_data.to_csv(temp_file, index=False)
-        logger.info(f"Saved temporary file: {temp_file}")
+        teams_file = lib_data_dir / "teams.js"
+        teams_js = f"export const teams = {teams_data.to_dict('records')};"
+        with open(teams_file, 'w') as f:
+            f.write(teams_js)
+        logger.info(f"Saved teams data: {teams_file}")
     
-    if players_data is not None:
-        temp_file = Path(f"temp_players.csv")
-        players_data.to_csv(temp_file, index=False)
-        logger.info(f"Saved temporary file: {temp_file}")
-    
+    # Save rosters data
     if rosters_data is not None:
-        temp_file = Path(f"temp_rosters_{season}.csv")
-        rosters_data.to_csv(temp_file, index=False)
-        logger.info(f"Saved temporary file: {temp_file}")
+        rosters_file = lib_data_dir / "rosters.js"
+        rosters_js = f"export const rosters = {rosters_data.to_dict('records')};"
+        with open(rosters_file, 'w') as f:
+            f.write(rosters_js)
+        logger.info(f"Saved rosters data: {rosters_file}")
     
+    # Save schedule data
     if schedule_data is not None:
-        temp_file = Path(f"temp_schedule_{season}.csv")
-        schedule_data.to_csv(temp_file, index=False)
-        logger.info(f"Saved temporary file: {temp_file}")
+        schedule_file = lib_data_dir / "schedule.js"
+        schedule_js = f"export const schedule = {schedule_data.to_dict('records')};"
+        with open(schedule_file, 'w') as f:
+            f.write(schedule_js)
+        logger.info(f"Saved schedule data: {schedule_file}")
+    
+    logger.info("All static data saved to lib/data folder successfully!")
 
 def get_current_season():
     """Get the current NFL season."""
@@ -151,12 +137,11 @@ def main():
         
         # Download all static data
         teams_data = download_teams_data()
-        players_data = download_players_data()
         rosters_data = download_rosters_data(current_season)
         schedule_data = download_schedule_data(current_season)
         
-        # Update database
-        update_database(teams_data, players_data, rosters_data, schedule_data, current_season)
+        # Save to lib/data folder
+        save(teams_data, rosters_data, schedule_data, current_season)
         
         logger.info("Static data update completed successfully!")
         
