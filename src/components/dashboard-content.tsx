@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { teams } from "@/lib/data/teams"
 
 interface DashboardContentProps {
   currentView: string
@@ -38,13 +39,6 @@ export function DashboardContent({ currentView, currentSport }: DashboardContent
       time: "1:00 PM ET",
       date: "Tomorrow"
     }
-  ]
-
-  const sampleTeams = [
-    { name: "Kansas City Chiefs", color: "#E31837", record: "11-6" },
-    { name: "Buffalo Bills", color: "#00338D", record: "11-6" },
-    { name: "San Francisco 49ers", color: "#AA0000", record: "12-5" },
-    { name: "Dallas Cowboys", color: "#003594", record: "12-5" }
   ]
 
   const samplePlayers = [
@@ -102,36 +96,143 @@ export function DashboardContent({ currentView, currentSport }: DashboardContent
   }
 
   if (currentView === "teams") {
+    // Filter teams based on current sport selection
+    const filteredTeams = currentSport === "nfl" 
+      ? teams.filter(team => team.team_conf === "AFC" || team.team_conf === "NFC")
+      : currentSport === "nba" 
+        ? [] // No NBA teams yet
+        : teams // Show all teams if "all" is selected
+
     return (
       <div className="p-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Teams</h2>
-          <p className="text-gray-600">Browse teams and their key players</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">NFL Teams</h2>
+          <p className="text-gray-600">
+            {currentSport === "nfl" 
+              ? "All NFL teams organized by conference and division"
+              : currentSport === "nba"
+                ? "NBA teams coming soon"
+                : "All available teams"
+            }
+          </p>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sampleTeams.map((team, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <div className="flex items-center space-x-3 mb-3">
-                <div 
-                  className="w-6 h-6 rounded-full"
-                  style={{ backgroundColor: team.color }}
-                />
-                <div>
-                  <h3 className="font-semibold text-gray-900">{team.name}</h3>
-                  <p className="text-sm text-gray-500">Record: {team.record}</p>
-                </div>
+        {/* Conference Sections */}
+        {currentSport !== "nba" && (
+          <>
+            {/* AFC Teams */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <div className="w-4 h-4 bg-red-600 rounded mr-2"></div>
+                AFC Teams
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredTeams
+                  .filter(team => team.team_conf === "AFC")
+                  .sort((a, b) => a.team_division.localeCompare(b.team_division) || a.team_name.localeCompare(b.team_name))
+                  .map((team) => (
+                    <div
+                      key={team.team_id}
+                      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group"
+                    >
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                          style={{ backgroundColor: team.team_color }}
+                        >
+                          {team.team_abbr}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {team.team_name}
+                          </h4>
+                          <p className="text-xs text-gray-500">{team.team_division}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex space-x-1">
+                          <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: team.team_color }}
+                          />
+                          {team.team_color2 && team.team_color2 !== "#a5acaf" && (
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: team.team_color2 }}
+                            />
+                          )}
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          className="bg-blue-600 hover:bg-blue-700 text-xs"
+                        >
+                          View Players
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
               </div>
-              
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                View Players
-              </Button>
             </div>
-          ))}
-        </div>
+
+            {/* NFC Teams */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <div className="w-4 h-4 bg-blue-600 rounded mr-2"></div>
+                NFC Teams
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredTeams
+                  .filter(team => team.team_conf === "NFC")
+                  .sort((a, b) => a.team_division.localeCompare(b.team_division) || a.team_name.localeCompare(b.team_name))
+                  .map((team) => (
+                    <div
+                      key={team.team_id}
+                      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group"
+                    >
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                          style={{ backgroundColor: team.team_color }}
+                        >
+                          {team.team_abbr}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {team.team_name}
+                          </h4>
+                          <p className="text-xs text-gray-500">{team.team_division}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex space-x-1">
+                          <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: team.team_color }}
+                          />
+                          {team.team_color2 && team.team_color2 !== "#a5acaf" && (
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: team.team_color2 }}
+                            />
+                          )}
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          className="bg-blue-600 hover:bg-blue-700 text-xs"
+                        >
+                          View Players
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     )
   }

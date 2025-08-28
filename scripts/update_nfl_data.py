@@ -17,6 +17,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
 import nfl_data_py as nfl
+import pandas as pd
+import numpy as np
+import json
 
 # Load environment variables
 load_dotenv()
@@ -81,6 +84,43 @@ def download_schedule_data(season):
         logger.error(f"Error downloading schedule data for {season}: {e}")
         return None
 
+def deduplicate_teams(teams_data):
+    """Remove duplicate teams based on team_id, keeping the most recent version."""
+    if teams_data is None or teams_data.empty:
+        return teams_data
+    
+    logger.info("Deduplicating teams data...")
+    
+    # We know exactly which teams are duplicates - just filter them out
+    # Remove: LA (Los Angeles Rams), OAK (Oakland Raiders), SD (San Diego Chargers), STL (St. Louis Rams)
+    teams_to_remove = ['LA', 'OAK', 'SD', 'STL']
+    
+    # Filter out the old/duplicate team abbreviations
+    filtered_teams = teams_data[~teams_data['team_abbr'].isin(teams_to_remove)]
+    
+    logger.info(f"Deduplicated teams: {len(teams_data)} -> {len(filtered_teams)}")
+    
+    return filtered_teams
+
+def convert_nan_to_null(obj):
+    """Convert pandas nan values to null for JavaScript compatibility."""
+    if isinstance(obj, dict):
+        return {key: convert_nan_to_null(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_nan_to_null(item) for item in obj]
+    elif pd.isna(obj):
+        return None
+    elif isinstance(obj, pd.Timestamp):
+        # Convert pandas timestamps to ISO string format
+        return obj.isoformat() if pd.notna(obj) else None
+    elif isinstance(obj, (int, float)):
+        # Handle numeric types
+        if pd.isna(obj) or (isinstance(obj, float) and np.isnan(obj)):
+            return None
+        return obj
+    else:
+        return obj
+
 def save(teams_data, rosters_data, schedule_data, season):
     """Save static data to lib/data folder as JavaScript files."""
     # Create lib/data directory if it doesn't exist
@@ -92,7 +132,11 @@ def save(teams_data, rosters_data, schedule_data, season):
     # Save teams data
     if teams_data is not None:
         teams_file = lib_data_dir / "teams.js"
-        teams_js = f"export const teams = {teams_data.to_dict('records')};"
+        # Deduplicate teams and convert to records
+        teams_deduped = deduplicate_teams(teams_data)
+        teams_records = teams_deduped.to_dict('records') if hasattr(teams_deduped, 'to_dict') else teams_deduped
+        teams_records_clean = convert_nan_to_null(teams_records)
+        teams_js = f"export const teams = {json.dumps(teams_records_clean, indent=2)};"
         with open(teams_file, 'w') as f:
             f.write(teams_js)
         logger.info(f"Saved teams data: {teams_file}")
@@ -100,7 +144,10 @@ def save(teams_data, rosters_data, schedule_data, season):
     # Save rosters data
     if rosters_data is not None:
         rosters_file = lib_data_dir / "rosters.js"
-        rosters_js = f"export const rosters = {rosters_data.to_dict('records')};"
+        # Convert to records and handle nan values
+        rosters_records = rosters_data.to_dict('records')
+        rosters_records_clean = convert_nan_to_null(rosters_records)
+        rosters_js = f"export const rosters = {json.dumps(rosters_records_clean, indent=2)};"
         with open(rosters_file, 'w') as f:
             f.write(rosters_js)
         logger.info(f"Saved rosters data: {rosters_file}")
@@ -108,7 +155,10 @@ def save(teams_data, rosters_data, schedule_data, season):
     # Save schedule data
     if schedule_data is not None:
         schedule_file = lib_data_dir / "schedule.js"
-        schedule_js = f"export const schedule = {schedule_data.to_dict('records')};"
+        # Convert to records and handle nan values
+        schedule_records = schedule_data.to_dict('records')
+        schedule_records_clean = convert_nan_to_null(schedule_records)
+        schedule_js = f"export const schedule = {json.dumps(schedule_records_clean, indent=2)};"
         with open(schedule_file, 'w') as f:
             f.write(schedule_js)
         logger.info(f"Saved schedule data: {schedule_file}")

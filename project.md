@@ -18,7 +18,7 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - **Backend Database**: Supabase (PostgreSQL)
 
 ## Project Status
-- ✅ **Project Initialized**: Next.js app with TypeScript and Tailwind CSS
+- ✅ **Project Initialized**: Next.js app with TypeScript, shadcn/ui and Tailwind CSS
 - ✅ **shadcn/ui Integration**: Button component successfully implemented
 - ✅ **Development Server**: Running on http://localhost:3000
 - ✅ **Dependencies**: All packages properly installed and configured
@@ -26,6 +26,8 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **NFL Data Pipeline**: Python scripts for data collection implemented
 - ✅ **Supabase Integration**: Database connection and table creation completed
 - ✅ **Data Architecture**: Hybrid approach implemented (static data in frontend, weekly stats in database)
+- ✅ **UI Layout**: Complete navigation structure with sport toggle, secondary navigation, and responsive betslip
+- ✅ **Teams View**: NFL teams display with real data, colors, and conference organization
 
 ## Project Structure
 ```
@@ -34,10 +36,17 @@ parlayanalyzer/
 │   ├── app/               # Next.js App Router
 │   │   ├── globals.css    # Tailwind + shadcn/ui styles
 │   │   ├── layout.tsx     # Root layout with Inter font
-│   │   └── page.tsx       # Home page with demo UI
+│   │   └── page.tsx       # Main dashboard with navigation and content
 │   ├── components/         # React components
-│   │   └── ui/
-│   │       └── button.tsx # shadcn/ui button component
+│   │   ├── ui/            # shadcn/ui components
+│   │   │   ├── button.tsx # Button component
+│   │   │   ├── tabs.tsx   # Tabs component
+│   │   │   ├── select.tsx # Select component
+│   │   │   └── collapsible.tsx # Collapsible component
+│   │   ├── navigation.tsx # Top navigation with sport toggle
+│   │   ├── secondary-nav.tsx # Secondary navigation (Games/Teams/Players)
+│   │   ├── dashboard-content.tsx # Main content area with different views
+│   │   └── betslip.tsx    # Bet slip component (responsive)
 │   └── lib/
 │       ├── utils.ts       # Utility functions (cn helper)
 │       └── data/          # Static NFL data (teams, rosters, schedule)
@@ -54,6 +63,33 @@ parlayanalyzer/
 SUPABASE_URL
 SUPABASE_ANON_KEY
 ```
+
+## UI Architecture
+
+### Navigation Structure
+- **Top Navigation**: Colored navbar with logo, sport toggle (All/NFL/NBA), and search
+- **Secondary Navigation**: Tabs for Games, Teams, and Players views
+- **Responsive Design**: Mobile-first with desktop optimizations
+
+### Layout Components
+- **Sport Toggle**: Dropdown to switch between All, NFL, and NBA sports
+- **View Tabs**: Games, Teams, and Players navigation
+- **Betslip**: Right sidebar on desktop, collapsible bottom panel on mobile
+- **Content Area**: Dynamic content based on selected view and sport
+
+### Teams View Features
+- **Conference Organization**: AFC and NFC sections
+- **Division Sorting**: Teams organized by division within conferences
+- **Team Cards**: Display team names, abbreviations, colors, and divisions
+- **Interactive Elements**: Hover effects and "View Players" buttons
+
+## Database
+
+### **Schema:**
+The `nfl` table stores player performance data with columns for:
+- Player identification (ID, name, position, team)
+- Game context (week, season, opponent)
+- Performance stats (passing, rushing, receiving, fantasy points)
 
 ## Python Data Scripts
 
@@ -72,14 +108,6 @@ pip install -r requirements.txt
 - **`update_nfl_stats.py`**: Downloads weekly player performance data
   - Runs daily during NFL season
   - Inserts data into Supabase database
-
-## Database
-
-### Schema
-The `nfl` table stores player performance data with columns for:
-- Player identification (ID, name, position, team)
-- Game context (week, season, opponent)
-- Performance stats (passing, rushing, receiving, fantasy points)
 
 
 ---
