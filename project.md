@@ -15,6 +15,7 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - **UI Components**: shadcn/ui
 - **Language**: TypeScript 5.9.2
 - **Development**: ESLint, PostCSS, Autoprefixer
+- **Backend Database**: Supabase (PostgreSQL)
 
 ## Project Status
 - ✅ **Project Initialized**: Next.js app with TypeScript and Tailwind CSS
@@ -23,7 +24,8 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Dependencies**: All packages properly installed and configured
 - ✅ **Build System**: PostCSS and Tailwind compilation working
 - ✅ **NFL Data Pipeline**: Python scripts for data collection implemented
-- ✅ **Data Architecture**: Hybrid approach designed (static data in frontend, weekly stats in database)
+- ✅ **Supabase Integration**: Database connection and table creation completed
+- ✅ **Data Architecture**: Hybrid approach implemented (static data in frontend, weekly stats in database)
 
 ## Project Structure
 ```
@@ -41,25 +43,17 @@ parlayanalyzer/
 │       └── data/          # Static NFL data (teams, rosters, schedule)
 ├── scripts/                # Python data collection scripts
 │   ├── requirements.txt   # Python dependencies
-│   ├── update_static_data.py    # Downloads teams, rosters, schedule (weekly)
-│   └── update_weekly_stats.py   # Downloads weekly player stats (daily)
+│   ├── update_nfl_data.py # Downloads league data and saves to src/lib/data
+│   ├── update_nfl_stats.py # Downloads player stats and inserts into Supabase
+├── .env                    # Environment variables for Supabase credentials
+└── temp_*.csv             # Temporary backup files from data collection
 ```
 
-## Sports Support
-- **Phase 1**: NFL (starting point)
-- **Future**: NBA and other sports
-
-## Core Concept
-Simple bet slip-like display showing:
-- How many times a player prop hit in the last N games
-- Simple, yet insightful metrics to indicate confidence in the bet
-- Clean interface for building parlays
-
-## Development Commands
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+## Environment Variables
+```
+SUPABASE_URL
+SUPABASE_ANON_KEY
+```
 
 ## Python Data Scripts
 
@@ -70,15 +64,23 @@ pip install -r requirements.txt
 ```
 
 ### **Scripts:**
-- **`update_static_data.py`**: Downloads teams, rosters, schedule data
+- **`update_nfl_data.py`**: Downloads teams, rosters, schedule data
   - Runs weekly during NFL season
   - Saves data to `src/lib/data/` as JavaScript files
   - Creates: `teams.js`, `rosters.js`, `schedule.js`
 
-- **`update_weekly_stats.py`**: Downloads weekly player performance data
+- **`update_nfl_stats.py`**: Downloads weekly player performance data
   - Runs daily during NFL season
-  - Will save to Supabase database (when implemented)
-  - Currently saves to temporary CSV files
+  - Inserts data into Supabase database
+
+## Database
+
+### Schema
+The `nfl` table stores player performance data with columns for:
+- Player identification (ID, name, position, team)
+- Game context (week, season, opponent)
+- Performance stats (passing, rushing, receiving, fantasy points)
+
 
 ---
 
