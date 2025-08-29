@@ -107,14 +107,6 @@ export function DashboardContent({ currentView, currentSport }: DashboardContent
       <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">NFL Teams</h2>
-          <p className="text-gray-600">
-            {currentSport === "nfl" 
-              ? "All NFL teams organized by conference and division"
-              : currentSport === "nba"
-                ? "NBA teams coming soon"
-                : "All available teams"
-            }
-          </p>
         </div>
         
         {/* Conference Sections */}
@@ -123,112 +115,296 @@ export function DashboardContent({ currentView, currentSport }: DashboardContent
             {/* AFC Teams */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <div className="w-4 h-4 bg-red-600 rounded mr-2"></div>
-                AFC Teams
+                <img 
+                  src="https://raw.githubusercontent.com/nflverse/nflverse-pbp/master/AFC.png" 
+                  alt="AFC" 
+                  className="w-6 h-6 mr-2"
+                />
+                AFC
               </h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredTeams
-                  .filter(team => team.team_conf === "AFC")
-                  .sort((a, b) => a.team_division.localeCompare(b.team_division) || a.team_name.localeCompare(b.team_name))
-                  .map((team) => (
-                    <div
-                      key={team.team_id}
-                      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group"
-                    >
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                          style={{ backgroundColor: team.team_color }}
-                        >
-                          {team.team_abbr}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {team.team_name}
-                          </h4>
-                          <p className="text-xs text-gray-500">{team.team_division}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex space-x-1">
-                          <div 
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: team.team_color }}
+              
+              {/* AFC East */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">East</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "AFC" && team.team_division === "AFC East")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
+                      <div
+                        key={team.team_id}
+                        className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                        style={{ 
+                          backgroundColor: team.team_color,
+                          minHeight: '120px'
+                        }}
+                      >
+                        {/* Stacked logo above text layout */}
+                        <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={team.team_logo_espn} 
+                            alt={`${team.team_name} logo`}
+                            className="w-16 h-16 object-contain mb-3"
                           />
-                          {team.team_color2 && team.team_color2 !== "#a5acaf" && (
-                            <div 
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: team.team_color2 }}
-                            />
-                          )}
+                          <div className="text-center">
+                            <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
+                              {team.team_name}
+                            </h4>
+                          </div>
                         </div>
-                        
-                        <Button 
-                          size="sm" 
-                          className="bg-blue-600 hover:bg-blue-700 text-xs"
-                        >
-                          View Players
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
+              </div>
+              
+              {/* AFC North */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">North</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "AFC" && team.team_division === "AFC North")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
+                      <div
+                        key={team.team_id}
+                        className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                        style={{ 
+                          backgroundColor: team.team_color,
+                          minHeight: '120px'
+                        }}
+                      >
+                        {/* Stacked logo above text layout */}
+                        <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={team.team_logo_espn} 
+                            alt={`${team.team_name} logo`}
+                            className="w-16 h-16 object-contain mb-3"
+                          />
+                          <div className="text-center">
+                            <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
+                              {team.team_name}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              
+              {/* AFC South */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">South</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "AFC" && team.team_division === "AFC South")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
+                      <div
+                        key={team.team_id}
+                        className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                        style={{ 
+                          backgroundColor: team.team_color,
+                          minHeight: '120px'
+                        }}
+                      >
+                        {/* Stacked logo above text layout */}
+                        <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={team.team_logo_espn} 
+                            alt={`${team.team_name} logo`}
+                            className="w-16 h-16 object-contain mb-3"
+                          />
+                          <div className="text-center">
+                            <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
+                              {team.team_name}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              
+              {/* AFC West */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">West</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "AFC" && team.team_division === "AFC West")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
+                      <div
+                        key={team.team_id}
+                        className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                        style={{ 
+                          backgroundColor: team.team_color,
+                          minHeight: '120px'
+                        }}
+                      >
+                        {/* Stacked logo above text layout */}
+                        <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={team.team_logo_espn} 
+                            alt={`${team.team_name} logo`}
+                            className="w-16 h-16 object-contain mb-3"
+                          />
+                          <div className="text-center">
+                            <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
+                              {team.team_name}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
 
             {/* NFC Teams */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <div className="w-4 h-4 bg-blue-600 rounded mr-2"></div>
-                NFC Teams
+                <img 
+                  src="https://raw.githubusercontent.com/nflverse/nflverse-pbp/master/NFC.png" 
+                  alt="NFC" 
+                  className="w-6 h-6 mr-2"
+                />
+                NFC
               </h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredTeams
-                  .filter(team => team.team_conf === "NFC")
-                  .sort((a, b) => a.team_division.localeCompare(b.team_division) || a.team_name.localeCompare(b.team_name))
-                  .map((team) => (
+              
+              {/* NFC East */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">East</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "NFC" && team.team_division === "NFC East")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
                     <div
                       key={team.team_id}
-                      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group"
+                      className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                      style={{ 
+                        backgroundColor: team.team_color,
+                        minHeight: '120px'
+                      }}
                     >
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                          style={{ backgroundColor: team.team_color }}
-                        >
-                          {team.team_abbr}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {/* Stacked logo above text layout */}
+                      <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                        <img 
+                          src={team.team_logo_espn} 
+                          alt={`${team.team_name} logo`}
+                          className="w-16 h-16 object-contain mb-3"
+                        />
+                        <div className="text-center">
+                          <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
                             {team.team_name}
                           </h4>
-                          <p className="text-xs text-gray-500">{team.team_division}</p>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex space-x-1">
-                          <div 
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: team.team_color }}
-                          />
-                          {team.team_color2 && team.team_color2 !== "#a5acaf" && (
-                            <div 
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: team.team_color2 }}
-                            />
-                          )}
-                        </div>
-                        
-                        <Button 
-                          size="sm" 
-                          className="bg-blue-600 hover:bg-blue-700 text-xs"
-                        >
-                          View Players
-                        </Button>
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+              
+              {/* NFC North */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">North</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "NFC" && team.team_division === "NFC North")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
+                      <div
+                        key={team.team_id}
+                        className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                        style={{ 
+                          backgroundColor: team.team_color,
+                          minHeight: '120px'
+                        }}
+                      >
+                        {/* Stacked logo above text layout */}
+                        <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={team.team_logo_espn} 
+                            alt={`${team.team_name} logo`}
+                            className="w-16 h-16 object-contain mb-3"
+                          />
+                          <div className="text-center">
+                            <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
+                              {team.team_name}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              
+              {/* NFC South */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">South</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "NFC" && team.team_division === "NFC South")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
+                      <div
+                        key={team.team_id}
+                        className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                        style={{ 
+                          backgroundColor: team.team_color,
+                          minHeight: '120px'
+                        }}
+                      >
+                        {/* Stacked logo above text layout */}
+                        <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={team.team_logo_espn} 
+                            alt={`${team.team_name} logo`}
+                            className="w-16 h-16 object-contain mb-3"
+                          />
+                          <div className="text-center">
+                            <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
+                              {team.team_name}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              
+              {/* NFC West */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-3">West</h4>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTeams
+                    .filter(team => team.team_conf === "NFC" && team.team_division === "NFC West")
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name))
+                    .map((team) => (
+                      <div
+                        key={team.team_id}
+                        className="relative rounded-lg border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                        style={{ 
+                          backgroundColor: team.team_color,
+                          minHeight: '120px'
+                        }}
+                      >
+                        {/* Stacked logo above text layout */}
+                        <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={team.team_logo_espn} 
+                            alt={`${team.team_name} logo`}
+                            className="w-16 h-16 object-contain mb-3"
+                          />
+                          <div className="text-center">
+                            <h4 className="font-bold text-white text-base tracking-wide leading-none whitespace-nowrap">
+                              {team.team_name}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           </>

@@ -28,6 +28,7 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Data Architecture**: Hybrid approach implemented (static data in frontend, weekly stats in database)
 - ✅ **UI Layout**: Complete navigation structure with sport toggle, secondary navigation, and responsive betslip
 - ✅ **Teams View**: NFL teams display with real data, colors, and conference organization
+- ✅ **Enhanced Team Panels**: Expanded design with team colors as backgrounds, logos and white text
 
 ## Project Structure
 ```
@@ -78,10 +79,15 @@ SUPABASE_ANON_KEY
 - **Content Area**: Dynamic content based on selected view and sport
 
 ### Teams View Features
-- **Conference Organization**: AFC and NFC sections
-- **Division Sorting**: Teams organized by division within conferences
-- **Team Cards**: Display team names, abbreviations, colors, and divisions
-- **Interactive Elements**: Hover effects and "View Players" buttons
+- **Conference Organization**: AFC and NFC sections with official conference logos
+- **Division Organization**: Teams grouped by division (East, North, South, West) with clear headers
+- **Enhanced Team Panels**: 
+  - Team primary colors as backgrounds
+  - Subtle background logos with reduced opacity
+  - Stacked logo + text layout for better visual hierarchy
+  - Consistent single-line team names with proper spacing
+  - White text for optimal contrast against colored backgrounds
+- **Interactive Elements**: Hover effects and clickable panels for viewing players
 
 ## Database
 
