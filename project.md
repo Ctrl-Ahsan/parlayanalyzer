@@ -31,6 +31,8 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Enhanced Team Panels**: Expanded design with team colors as backgrounds, logos and white text
 - ✅ **Player Cards**: Interactive team-to-player navigation with position-based grouping
 - ✅ **Smart Player Filtering**: Snap count-based filtering to show only relevant offensive players (450 players vs 3,215 total)
+- ✅ **Expanded Player Panel**: Player detail view with prop buttons displaying season averages for position-specific stats (QB, RB, WR, TE)
+- ✅ **Game Logs Table**: ESPN-style game log display with position-specific stats and color-coded performance metrics
 
 ## Project Structure
 ```
@@ -102,6 +104,23 @@ SUPABASE_ANON_KEY
   - Responsive grid layout (3-5 columns based on screen size)
 - **Navigation**: Back button to return to teams view with team header
 - **Data Integration**: Real player data from filtered rosters with headshots and team information
+
+### Expanded Player Panel Features
+- **Two-Column Layout**: Player info and game logs side-by-side on large screens, stacked on mobile
+- **Player Header**: 
+  - Circular player photos with light grey background containers
+  - Team-colored panel backgrounds
+  - Player name, position, jersey number, and basic stats (height, weight, age, experience)
+  - Responsive sizing and layout for all screen sizes
+- **Player Props Section**: 
+  - Position-specific prop buttons (QB: passing/rushing stats, RB: rushing/receiving, WR/TE: receiving)
+  - Season average values displayed prominently
+  - Clean, clickable interface ready for betslip integration
+- **Game Logs Table**: 
+  - ESPN-style layout with position-specific stat columns
+  - Color-coded performance metrics (blue for yards, green for TDs, red for turnovers)
+  - Responsive table design with proper mobile handling
+  - League and season filter dropdowns
 
 ## Database
 
