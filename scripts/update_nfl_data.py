@@ -121,6 +121,50 @@ def convert_nan_to_null(obj):
     else:
         return obj
 
+def filter_active_offensive_players(rosters_data, season, min_snaps=50):
+    """Filter rosters to only include active offensive players (QB, RB, WR, TE) who have taken snaps."""
+    if rosters_data is None or rosters_data.empty:
+        return rosters_data
+    
+    logger.info("Filtering rosters to active offensive players only...")
+    
+    # Define offensive positions
+    offensive_positions = ['QB', 'RB', 'WR', 'TE']
+    
+    # Filter rosters to only include offensive players
+    offensive_rosters = rosters_data[rosters_data['position'].isin(offensive_positions)]
+    logger.info(f"Offensive players: {len(offensive_rosters)}")
+    
+    try:
+        # Get snap counts data to find players who have taken snaps
+        logger.info("Downloading snap counts to filter active players...")
+        snaps_data = nfl.import_snap_counts([season])
+        
+        if not snaps_data.empty:
+            # Filter to offensive positions
+            offensive_snaps = snaps_data[snaps_data['position'].isin(offensive_positions)]
+            
+            # Calculate total snaps per player
+            player_snap_totals = offensive_snaps.groupby('player')['offense_snaps'].sum()
+            
+            # Get players with minimum snap count
+            active_players = player_snap_totals[player_snap_totals >= min_snaps].index.tolist()
+            logger.info(f"Players with {min_snaps}+ snaps: {len(active_players)}")
+            
+            # Filter offensive rosters to only include players who have taken snaps
+            active_offensive_rosters = offensive_rosters[offensive_rosters['player_name'].isin(active_players)]
+            
+            logger.info(f"Active offensive players: {len(offensive_rosters)} -> {len(active_offensive_rosters)}")
+            return active_offensive_rosters
+        else:
+            logger.warning("No snap counts data available, returning all offensive players")
+            return offensive_rosters
+            
+    except Exception as e:
+        logger.error(f"Error filtering by snap counts: {e}")
+        logger.warning("Returning all offensive players due to error")
+        return offensive_rosters
+
 def save(teams_data, rosters_data, schedule_data, season):
     """Save static data to lib/data folder as JavaScript files."""
     # Create lib/data directory if it doesn't exist
@@ -141,16 +185,17 @@ def save(teams_data, rosters_data, schedule_data, season):
             f.write(teams_js)
         logger.info(f"Saved teams data: {teams_file}")
     
-    # Save rosters data
+    # Save rosters data (active offensive players only)
     if rosters_data is not None:
         rosters_file = lib_data_dir / "rosters.js"
-        # Convert to records and handle nan values
-        rosters_records = rosters_data.to_dict('records')
+        # Filter to active offensive players only, convert to records and handle nan values
+        active_offensive_rosters = filter_active_offensive_players(rosters_data, season)
+        rosters_records = active_offensive_rosters.to_dict('records')
         rosters_records_clean = convert_nan_to_null(rosters_records)
         rosters_js = f"export const rosters = {json.dumps(rosters_records_clean, indent=2)};"
         with open(rosters_file, 'w') as f:
             f.write(rosters_js)
-        logger.info(f"Saved rosters data: {rosters_file}")
+        logger.info(f"Saved active offensive rosters data: {rosters_file}")
     
     # Save schedule data
     if schedule_data is not None:

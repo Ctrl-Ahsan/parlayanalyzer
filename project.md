@@ -29,6 +29,8 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **UI Layout**: Complete navigation structure with sport toggle, secondary navigation, and responsive betslip
 - ✅ **Teams View**: NFL teams display with real data, colors, and conference organization
 - ✅ **Enhanced Team Panels**: Expanded design with team colors as backgrounds, logos and white text
+- ✅ **Player Cards**: Interactive team-to-player navigation with position-based grouping
+- ✅ **Smart Player Filtering**: Snap count-based filtering to show only relevant offensive players (450 players vs 3,215 total)
 
 ## Project Structure
 ```
@@ -89,6 +91,18 @@ SUPABASE_ANON_KEY
   - White text for optimal contrast against colored backgrounds
 - **Interactive Elements**: Hover effects and clickable panels for viewing players
 
+### Player Cards Features
+- **Position-Based Grouping**: Players organized by QB, RB, WR, TE with clear headers
+- **Smart Filtering**: Only shows players with 50+ offensive snaps (relevant for prop betting)
+- **Enhanced Design**: 
+  - Team color backgrounds with subtle team logo watermarks
+  - Player names prominently displayed at top
+  - Natural aspect ratio headshots aligned to bottom
+  - Larger, more prominent player images
+  - Responsive grid layout (3-5 columns based on screen size)
+- **Navigation**: Back button to return to teams view with team header
+- **Data Integration**: Real player data from filtered rosters with headshots and team information
+
 ## Database
 
 ### **Schema:**
@@ -110,6 +124,8 @@ pip install -r requirements.txt
   - Runs weekly during NFL season
   - Saves data to `src/lib/data/` as JavaScript files
   - Creates: `teams.js`, `rosters.js`, `schedule.js`
+  - **Smart Filtering**: Uses snap counts to filter rosters to only relevant offensive players (QB, RB, WR, TE with 50+ snaps)
+  - **Data Reduction**: Filters from 3,215 total players to 450 relevant players (86% reduction)
 
 - **`update_nfl_stats.py`**: Downloads weekly player performance data
   - Runs daily during NFL season
