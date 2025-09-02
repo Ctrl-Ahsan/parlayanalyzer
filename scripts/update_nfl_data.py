@@ -212,14 +212,19 @@ def save(teams_data, rosters_data, schedule_data, season):
 
 def get_current_season():
     """Get the current NFL season."""
-    current_year = datetime.now().year
-    current_month = datetime.now().month
+    current_date = datetime.now()
+    current_year = current_date.year
+    current_month = current_date.month
+    current_day = current_date.day
     
-    # NFL season typically starts in September
-    if current_month >= 9:
-        return current_year
-    else:
+    # NFL season starts on September 4th
+    # If we're before September 4th, we're still in the previous season
+    if current_month == 9 and current_day < 4:
         return current_year - 1
+    elif current_month < 9:
+        return current_year - 1
+    else:
+        return current_year
 
 def main():
     """Main function to update static data."""
