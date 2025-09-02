@@ -33,6 +33,7 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Smart Player Filtering**: Snap count-based filtering to show only relevant offensive players (450 players vs 3,215 total)
 - ✅ **Expanded Player Panel**: Player detail view with prop buttons displaying season averages for position-specific stats (QB, RB, WR, TE)
 - ✅ **Game Logs Table**: ESPN-style game log display with position-specific stats and color-coded performance metrics
+- ✅ **Real Data Integration**: Game logs connected to Supabase database with live player performance data
 
 ## Project Structure
 ```
@@ -59,6 +60,7 @@ parlayanalyzer/
 │   ├── requirements.txt   # Python dependencies
 │   ├── update_nfl_data.py # Downloads league data and saves to src/lib/data
 │   ├── update_nfl_stats.py # Downloads player stats and inserts into Supabase
+│   └── setup_database.sql # Database schema setup script
 ├── .env                    # Environment variables for Supabase credentials
 └── temp_*.csv             # Temporary backup files from data collection
 ```
@@ -119,16 +121,17 @@ SUPABASE_ANON_KEY
 - **Game Logs Table**: 
   - ESPN-style layout with position-specific stat columns
   - Color-coded performance metrics (blue for yards, green for TDs, red for turnovers)
-  - Responsive table design with proper mobile handling
-  - League and season filter dropdowns
+  - Responsive table design with natural column sizing and horizontal scrolling only when needed
+  - Season filter dropdown for historical data access
 
 ## Database
 
 ### **Schema:**
 The `nfl` table stores player performance data with columns for:
 - Player identification (ID, name, position, team)
-- Game context (week, season, opponent)
+- Game context (week, season, opponent, game result)
 - Performance stats (passing, rushing, receiving, fantasy points)
+- Metadata (created_at, updated_at timestamps)
 
 ## Python Data Scripts
 

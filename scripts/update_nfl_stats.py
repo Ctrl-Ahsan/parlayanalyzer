@@ -43,14 +43,19 @@ def get_supabase_client():
 
 def get_current_season():
     """Get the current NFL season."""
-    current_year = datetime.now().year
-    current_month = datetime.now().month
+    current_date = datetime.now()
+    current_year = current_date.year
+    current_month = current_date.month
+    current_day = current_date.day
     
-    # NFL season typically starts in September
-    if current_month >= 9:
-        return current_year
-    else:
+    # NFL season starts on September 4th
+    # If we're before September 4th, we're still in the previous season
+    if current_month == 9 and current_day < 4:
         return current_year - 1
+    elif current_month < 9:
+        return current_year - 1
+    else:
+        return current_year
 
 def download_weekly_data(season):
     """Download weekly data for the specified season."""
@@ -69,13 +74,70 @@ def download_weekly_data(season):
         logger.error(f"Error downloading weekly data for {season}: {e}")
         return None
 
-def prepare_data(data, season):
+def download_schedule_data(season):
+    """Download schedule data for the specified season."""
+    try:
+        logger.info(f"Downloading schedule data for {season}...")
+        schedule_data = nfl.import_schedules([season])
+        
+        if not schedule_data.empty:
+            logger.info(f"Successfully downloaded {len(schedule_data)} schedule rows for {season}")
+            return schedule_data
+        else:
+            logger.warning(f"No schedule data available for {season}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error downloading schedule data for {season}: {e}")
+        return None
+
+def prepare_data(data, season, schedule_data=None):
     """Prepare the weekly data for insertion into Supabase."""
     try:
         # Debug: Let's see what columns are actually available
         logger.info(f"Available columns in NFL data: {list(data.columns)}")
         
+        # Add game results if schedule data is available
+        if schedule_data is not None:
+            logger.info("Adding game results from schedule data...")
+            # Create a mapping of (week, team, opponent) to game result
+            game_results = {}
+            for _, game in schedule_data.iterrows():
+                week = game['week']
+                home_team = game['home_team']
+                away_team = game['away_team']
+                home_score = game['home_score']
+                away_score = game['away_score']
+                
+                # Skip if scores are missing
+                if pd.isna(home_score) or pd.isna(away_score):
+                    continue
+                
+                # Use the result column (point differential) to determine winner
+                point_diff = game['result']
+                if point_diff > 0:
+                    home_result = f"W {int(home_score)}-{int(away_score)}"
+                    away_result = f"L {int(away_score)}-{int(home_score)}"
+                elif point_diff < 0:
+                    home_result = f"L {int(home_score)}-{int(away_score)}"
+                    away_result = f"W {int(away_score)}-{int(home_score)}"
+                else:
+                    home_result = f"T {int(home_score)}-{int(away_score)}"
+                    away_result = home_result
+                
+                # Store results for both teams
+                game_results[(week, home_team, away_team)] = home_result
+                game_results[(week, away_team, home_team)] = away_result
+            
+            # Add game result to player data
+            data['game_result'] = data.apply(
+                lambda row: game_results.get((row['week'], row['recent_team'], row['opponent_team']), 'N/A'),
+                axis=1
+            )
+            logger.info(f"Added game results for {len(game_results)} games")
+        
         # Select and rename columns to match our table schema
+        # Note: game_result is excluded from database insertion until column is added to schema
         columns_mapping = {
             'player_id': 'player_id',
             'player_name': 'player_name',
@@ -87,6 +149,7 @@ def prepare_data(data, season):
             'season': 'season',
             'season_type': 'season_type',
             'opponent_team': 'opponent_team',
+            'game_result': 'game_result',
             'completions': 'completions',
             'attempts': 'attempts',
             'passing_yards': 'passing_yards',
@@ -115,8 +178,11 @@ def prepare_data(data, season):
         available_columns = [col for col in columns_mapping.keys() if col in data.columns]
         logger.info(f"Columns that will be mapped: {available_columns}")
         
-        # Create a new dataframe with only the columns we need
+        # Create a new dataframe with only the columns we need and apply column mapping
         prepared_data = data[available_columns].copy()
+        
+        # Apply column mapping (rename columns to match database schema)
+        prepared_data = prepared_data.rename(columns=columns_mapping)
         
         # Add season column if it doesn't exist
         if 'season' not in prepared_data.columns:
@@ -141,7 +207,7 @@ def prepare_data(data, season):
         logger.error(f"Error preparing data for Supabase: {e}")
         return None
 
-def update_database(data, season):
+def update_database(data, season, schedule_data=None):
     """Update the database with new weekly data."""
     try:
         # Initialize Supabase client
@@ -149,31 +215,32 @@ def update_database(data, season):
         logger.info("Connected to Supabase successfully")
         
         # Prepare data for insertion
-        records = prepare_data(data, season)
+        records = prepare_data(data, season, schedule_data)
         
         if not records:
             logger.error("No records prepared for insertion")
             return
         
-        # Insert data into the nfl table
-        logger.info(f"Inserting {len(records)} records into Supabase...")
+        # Upsert data into the nfl table (insert or update existing records)
+        logger.info(f"Upserting {len(records)} records into Supabase...")
         
-        # Insert in batches to avoid overwhelming the API
+        # Upsert in batches to avoid overwhelming the API
         batch_size = 100
-        total_inserted = 0
+        total_upserted = 0
         
         for i in range(0, len(records), batch_size):
             batch = records[i:i + batch_size]
             try:
-                result = supabase.table('nfl').insert(batch).execute()
-                batch_inserted = len(result.data) if result.data else 0
-                total_inserted += batch_inserted
-                logger.info(f"Inserted batch {i//batch_size + 1}: {batch_inserted} records")
+                # Use upsert to handle existing records
+                result = supabase.table('nfl').upsert(batch, on_conflict='player_id,team,week,season').execute()
+                batch_upserted = len(result.data) if result.data else 0
+                total_upserted += batch_upserted
+                logger.info(f"Upserted batch {i//batch_size + 1}: {batch_upserted} records")
             except Exception as e:
-                logger.error(f"Error inserting batch {i//batch_size + 1}: {e}")
+                logger.error(f"Error upserting batch {i//batch_size + 1}: {e}")
                 # Continue with next batch instead of failing completely
         
-        logger.info(f"Database update completed! Total records inserted: {total_inserted}")
+        logger.info(f"Database update completed! Total records upserted: {total_upserted}")
         
         # Also save to temporary file as backup
         temp_file = Path(f"temp_nfl_{season}.csv")
@@ -199,9 +266,12 @@ def main():
         # Download weekly data
         weekly_data = download_weekly_data(current_season)
         
+        # Download schedule data for game results
+        schedule_data = download_schedule_data(current_season)
+        
         if weekly_data is not None:
             # Update database
-            update_database(weekly_data, current_season)
+            update_database(weekly_data, current_season, schedule_data)
             logger.info("Weekly stats update completed successfully!")
         else:
             logger.error("Failed to download weekly data")
