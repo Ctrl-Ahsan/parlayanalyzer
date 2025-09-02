@@ -6,34 +6,28 @@ import { SecondaryNav } from "@/components/secondary-nav"
 import { DashboardContent } from "@/components/dashboard-content"
 import { Betslip } from "@/components/betslip"
 
-// Sample bet lines for demonstration
-const sampleLines = [
-  {
-    id: "1",
-    player: "Patrick Mahomes",
-    prop: "Passing TDs",
-    value: "2.5",
-    overUnder: "over" as const,
-    hitRate: 65.2,
-    totalGames: 17,
-    hits: 11
-  },
-  {
-    id: "2",
-    player: "Christian McCaffrey",
-    prop: "Rushing Yards",
-    value: "85.5",
-    overUnder: "over" as const,
-    hitRate: 70.6,
-    totalGames: 17,
-    hits: 12
-  }
-]
-
 export default function Home() {
   const [currentSport, setCurrentSport] = useState("all")
   const [currentView, setCurrentView] = useState("games")
-  const [betLines, setBetLines] = useState(sampleLines)
+  const [betLines, setBetLines] = useState<Array<{
+    id: string
+    player: string
+    prop: string
+    propType: string
+    value: string
+    overUnder: "over" | "under"
+    hitRate: number
+    totalGames: number
+    hits: number
+    propData?: {
+      high: number
+      low: number
+      average: number
+      median: number
+      totalGames: number
+      hitRate: number
+    }
+  }>>([])
 
   const handleRemoveLine = (id: string) => {
     setBetLines(lines => lines.filter(line => line.id !== id))
@@ -41,6 +35,53 @@ export default function Home() {
 
   const handleClearAll = () => {
     setBetLines([])
+  }
+
+  const handleAddLine = (newLine: {
+    player: string
+    prop: string
+    propType: string
+    value: string
+    overUnder: "over" | "under"
+    hitRate: number
+    totalGames: number
+    hits: number
+    propData?: {
+      high: number
+      low: number
+      average: number
+      median: number
+      totalGames: number
+      hitRate: number
+    }
+  }) => {
+    const id = Date.now().toString() // Simple ID generation
+    setBetLines(lines => [...lines, { ...newLine, id }])
+  }
+
+  const handleUpdateLine = (id: string, updates: Partial<{
+    player: string
+    prop: string
+    propType: string
+    value: string
+    overUnder: "over" | "under"
+    hitRate: number
+    totalGames: number
+    hits: number
+    propData?: {
+      high: number
+      low: number
+      average: number
+      median: number
+      totalGames: number
+      hitRate: number
+    }
+  }>) => {
+    setBetLines(lines => 
+      lines.map(line => 
+        line.id === id ? { ...line, ...updates } : line
+      )
+    )
   }
 
   return (
@@ -64,6 +105,8 @@ export default function Home() {
           <DashboardContent 
             currentView={currentView}
             currentSport={currentSport}
+            onAddLine={handleAddLine}
+            betLines={betLines}
           />
         </div>
 
@@ -73,6 +116,7 @@ export default function Home() {
             lines={betLines}
             onRemoveLine={handleRemoveLine}
             onClearAll={handleClearAll}
+            onUpdateLine={handleUpdateLine}
             isMobile={false}
           />
         </div>
@@ -84,6 +128,7 @@ export default function Home() {
           lines={betLines}
           onRemoveLine={handleRemoveLine}
           onClearAll={handleClearAll}
+          onUpdateLine={handleUpdateLine}
           isMobile={true}
         />
       </div>

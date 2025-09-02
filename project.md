@@ -34,6 +34,7 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Expanded Player Panel**: Player detail view with prop buttons displaying season averages for position-specific stats (QB, RB, WR, TE)
 - ✅ **Game Logs Table**: ESPN-style game log display with position-specific stats and color-coded performance metrics
 - ✅ **Real Data Integration**: Game logs connected to Supabase database with live player performance data
+- ✅ **Betslip Functionality**: Complete prop-to-betslip integration with compact design and real-time data
 
 ## Project Structure
 ```
@@ -83,6 +84,14 @@ SUPABASE_ANON_KEY
 - **View Tabs**: Games, Teams, and Players navigation
 - **Betslip**: Right sidebar on desktop, collapsible bottom panel on mobile
 - **Content Area**: Dynamic content based on selected view and sport
+
+## Betslip Features
+- **Prop Integration**: Click any prop button on player page to add to betslip with real player data
+- **Over/Under Toggle**: Simple single-button toggle between "OVER" and "UNDER" states
+- **Value Adjustment**: Interactive slider for adjusting prop values with prop-specific ranges
+- **Performance Range Visualization**: Static performance markers (high/low/average) using real player statistics
+- **Real Data Storage**: Comprehensive player and prop data stored in betslip for analysis
+- **Time Frame Filtering**: Support for different time periods (L5, L10, L20, 2024, 2025) for data analysis
 
 ### Teams View Features
 - **Conference Organization**: AFC and NFC sections with official conference logos

@@ -9,9 +9,46 @@ import { useState, useEffect } from "react"
 interface DashboardContentProps {
   currentView: string
   currentSport: string
+  onAddLine?: (line: {
+    player: string
+    prop: string
+    propType: string
+    value: string
+    overUnder: "over" | "under"
+    hitRate: number
+    totalGames: number
+    hits: number
+    propData?: {
+      high: number
+      low: number
+      average: number
+      median: number
+      totalGames: number
+      hitRate: number
+    }
+  }) => void
+  betLines?: Array<{
+    id: string
+    player: string
+    prop: string
+    propType: string
+    value: string
+    overUnder: "over" | "under"
+    hitRate: number
+    totalGames: number
+    hits: number
+    propData?: {
+      high: number
+      low: number
+      average: number
+      median: number
+      totalGames: number
+      hitRate: number
+    }
+  }>
 }
 
-export function DashboardContent({ currentView, currentSport }: DashboardContentProps) {
+export function DashboardContent({ currentView, currentSport, onAddLine, betLines = [] }: DashboardContentProps) {
   const [selectedTeam, setSelectedTeam] = useState<any>(null)
   const [showPlayers, setShowPlayers] = useState(false)
   const [expandedPlayer, setExpandedPlayer] = useState<any>(null)
@@ -231,10 +268,88 @@ export function DashboardContent({ currentView, currentSport }: DashboardContent
     return []
   }
 
+  // Check if a prop is already added to betslip
+  const isPropAdded = (player: any, prop: any) => {
+    return betLines.some(line => 
+      line.player === player.player_name && line.prop === prop.label
+    )
+  }
+
   // Handle adding prop to betslip
-  const handleAddProp = (player: any, prop: any) => {
-    console.log(`Adding ${prop.label} for ${player.player_name} to betslip`)
-    // TODO: Implement betslip integration
+  const handleAddProp = async (player: any, prop: any) => {
+    if (!onAddLine) return
+    
+    try {
+      // Fetch player data to get prop statistics
+      const response = await fetch(`/api/nfl/game-logs?playerId=${player.player_id}&season=2024`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch player data')
+      }
+      const data = await response.json()
+      
+      // Get prop statistics from the API response
+      const propStats = data.propStats?.[prop.type]
+      let defaultValue = "0.5"
+      let hitRate = 50.0
+      let totalGames = 17
+      let hits = 8
+      
+      if (propStats) {
+        // Use real data for defaults
+        defaultValue = propStats.average.toString()
+        totalGames = propStats.totalGames
+        hitRate = 50.0 // Will be calculated based on prop value
+        hits = Math.floor(totalGames / 2)
+      } else {
+        // Fallback to reasonable defaults based on prop type
+        if (prop.type.includes("yards")) {
+          defaultValue = "50.5"
+        } else if (prop.type.includes("td")) {
+          defaultValue = "0.5"
+        } else if (prop.type.includes("completions") || prop.type.includes("receptions")) {
+          defaultValue = "3.5"
+        } else if (prop.type.includes("attempts")) {
+          defaultValue = "25.5"
+        }
+      }
+      
+      onAddLine({
+        player: player.player_name,
+        prop: prop.label,
+        propType: prop.type,
+        value: defaultValue,
+        overUnder: "over",
+        hitRate,
+        totalGames,
+        hits,
+        propData: propStats
+      })
+    } catch (error) {
+      console.error('Error fetching player data:', error)
+      
+      // Fallback to basic data if API fails
+      let defaultValue = "0.5"
+      if (prop.type.includes("yards")) {
+        defaultValue = "50.5"
+      } else if (prop.type.includes("td")) {
+        defaultValue = "0.5"
+      } else if (prop.type.includes("completions") || prop.type.includes("receptions")) {
+        defaultValue = "3.5"
+      } else if (prop.type.includes("attempts")) {
+        defaultValue = "25.5"
+      }
+      
+      onAddLine({
+        player: player.player_name,
+        prop: prop.label,
+        propType: prop.type,
+        value: defaultValue,
+        overUnder: "over",
+        hitRate: 50.0,
+        totalGames: 17,
+        hits: 8
+      })
+    }
   }
 
   if (currentView === "games") {
@@ -394,17 +509,24 @@ export function DashboardContent({ currentView, currentSport }: DashboardContent
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                    {propButtons.map((prop, index) => (
-                      <button
-                        key={index}
-                        className="bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-blue-300 transition-all duration-200 rounded-lg p-4 text-center group"
-                        onClick={() => handleAddProp(expandedPlayer, prop)}
-                      >
-                        <div className="text-gray-900 text-sm font-medium group-hover:text-blue-600">
-                          {prop.label}
-                        </div>
-                      </button>
-                    ))}
+                    {propButtons.map((prop, index) => {
+                      const isAdded = isPropAdded(expandedPlayer, prop)
+                      return (
+                        <button
+                          key={index}
+                          className={`border transition-all duration-200 rounded-lg p-4 text-center group ${
+                            isAdded 
+                              ? 'bg-blue-100 border-blue-400 text-blue-700 hover:bg-blue-200' 
+                              : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-blue-300 text-gray-900 group-hover:text-blue-600'
+                          }`}
+                          onClick={() => handleAddProp(expandedPlayer, prop)}
+                        >
+                          <div className="text-sm font-medium">
+                            {prop.label}
+                          </div>
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </div>
