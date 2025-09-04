@@ -38,6 +38,7 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Visual Hit Rate Counters**: Circular progress bars showing hit rates with color-coded performance (red/yellow/green)
 - ✅ **Dynamic Hit Rate Calculations**: Real-time hit rate updates based on time frame selection and prop value adjustments
 - ✅ **API Optimization**: Eliminated duplicate API calls by storing game logs data and reusing for betslip processing
+- ✅ **Code Refactoring**: Modularized dashboard into focused components for better maintainability and reusability
 
 ## Project Structure
 ```
@@ -46,27 +47,50 @@ parlayanalyzer/
 │   ├── app/               # Next.js App Router
 │   │   ├── globals.css    # Tailwind + shadcn/ui styles
 │   │   ├── layout.tsx     # Root layout with Inter font
-│   │   └── page.tsx       # Main dashboard with navigation and content
+│   │   ├── page.tsx       # Main dashboard with navigation and content
+│   │   └── api/           # API routes
+│   │       └── nfl/       # NFL data API endpoints
+│   │           └── game-logs/
+│   │               └── route.ts # Game logs API endpoint
 │   ├── components/         # React components
-│   │   ├── ui/            # shadcn/ui components
+│   │   ├── dashboard/     # Dashboard feature components
+│   │   │   ├── index.tsx  # Main dashboard orchestrator
+│   │   │   ├── games.tsx  # Games view
+│   │   │   ├── teams.tsx  # Teams grid view
+│   │   │   ├── roster.tsx # Team roster view
+│   │   │   └── player.tsx # Player detail view
+│   │   ├── ui/            # Reusable UI components
 │   │   │   ├── button.tsx # Button component
 │   │   │   ├── tabs.tsx   # Tabs component
 │   │   │   ├── select.tsx # Select component
-│   │   │   └── collapsible.tsx # Collapsible component
+│   │   │   ├── slider.tsx # Slider component
+│   │   │   ├── tooltip.tsx # Tooltip component
+│   │   │   ├── collapsible.tsx # Collapsible component
+│   │   │   ├── team-card.tsx # Team card component
+│   │   │   ├── player-card.tsx # Player card component
+│   │   │   ├── player-props.tsx # Player props section
+│   │   │   └── game-logs-table.tsx # Game logs table
 │   │   ├── navigation.tsx # Top navigation with sport toggle
-│   │   ├── secondary-nav.tsx # Secondary navigation (Games/Teams/Players)
-│   │   ├── dashboard-content.tsx # Main content area with different views
+│   │   ├── secondary-nav.tsx # Secondary navigation (Games/Teams)
 │   │   └── betslip.tsx    # Bet slip component (responsive)
 │   └── lib/
 │       ├── utils.ts       # Utility functions (cn helper)
 │       └── data/          # Static NFL data (teams, rosters, schedule)
+│           ├── teams.js   # NFL teams data
+│           ├── rosters.js # Player rosters data
+│           └── schedule.js # Game schedule data
 ├── scripts/                # Python data collection scripts
 │   ├── requirements.txt   # Python dependencies
 │   ├── update_nfl_data.py # Downloads league data and saves to src/lib/data
 │   ├── update_nfl_stats.py # Downloads player stats and inserts into Supabase
 │   └── setup_database.sql # Database schema setup script
 ├── .env                    # Environment variables for Supabase credentials
-└── temp_*.csv             # Temporary backup files from data collection
+├── temp_*.csv             # Temporary backup files from data collection
+├── components.json         # shadcn/ui configuration
+├── tailwind.config.js     # Tailwind CSS configuration
+├── tsconfig.json          # TypeScript configuration
+├── package.json           # Node.js dependencies
+└── README.md              # Project documentation
 ```
 
 ## Environment Variables
@@ -79,12 +103,12 @@ SUPABASE_ANON_KEY
 
 ### Navigation Structure
 - **Top Navigation**: Colored navbar with logo, sport toggle (All/NFL/NBA), and search
-- **Secondary Navigation**: Tabs for Games, Teams, and Players views
+- **Secondary Navigation**: Tabs for Games and Teams views
 - **Responsive Design**: Mobile-first with desktop optimizations
 
 ### Layout Components
 - **Sport Toggle**: Dropdown to switch between All, NFL, and NBA sports
-- **View Tabs**: Games, Teams, and Players navigation
+- **View Tabs**: Games and Teams navigation
 - **Betslip**: Right sidebar on desktop, collapsible bottom panel on mobile
 - **Content Area**: Dynamic content based on selected view and sport
 

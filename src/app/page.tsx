@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Navigation } from "@/components/navigation"
-import { DashboardContent } from "@/components/dashboard-content"
+import { Dashboard } from "@/components/dashboard"
 import { Betslip } from "@/components/betslip"
 
 export default function Home() {
@@ -110,7 +110,7 @@ export default function Home() {
       <div className="flex">
         {/* Dashboard Content */}
         <div className="flex-1 min-h-screen">
-          <DashboardContent 
+          <Dashboard 
             currentView={currentView}
             currentSport={currentSport}
             onViewChange={setCurrentView}
