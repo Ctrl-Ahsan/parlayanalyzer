@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const playerId = searchParams.get('playerId');
-    const season = searchParams.get('season') || '2024';
 
     if (!playerId) {
       return NextResponse.json(
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       playerId,
-      season: parseInt(season),
       gameLogs,
       total: gameLogs.length
     });

@@ -15,9 +15,9 @@ export default function Home() {
     propType: string
     value: string
     overUnder: "over" | "under"
-    hitRate: number
-    totalGames: number
-    hits: number
+    hitRate?: number
+    totalGames?: number
+    hits?: number
     propData?: {
       high: number
       low: number
@@ -47,9 +47,9 @@ export default function Home() {
     propType: string
     value: string
     overUnder: "over" | "under"
-    hitRate: number
-    totalGames: number
-    hits: number
+    hitRate?: number
+    totalGames?: number
+    hits?: number
     propData?: {
       high: number
       low: number
@@ -74,9 +74,9 @@ export default function Home() {
     propType: string
     value: string
     overUnder: "over" | "under"
-    hitRate: number
-    totalGames: number
-    hits: number
+    hitRate?: number
+    totalGames?: number
+    hits?: number
     propData?: {
       high: number
       low: number

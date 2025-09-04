@@ -65,6 +65,7 @@ export function DashboardContent({ currentView, currentSport, onViewChange, onAd
   const [showPlayers, setShowPlayers] = useState(false)
   const [expandedPlayer, setExpandedPlayer] = useState<any>(null)
   const [gameLogs, setGameLogs] = useState<any[]>([])
+  const [rawGameLogs, setRawGameLogs] = useState<any[]>([])
   const [gameLogsLoading, setGameLogsLoading] = useState(false)
   const [selectedSeason, setSelectedSeason] = useState(2024)
 
@@ -112,18 +113,22 @@ export function DashboardContent({ currentView, currentSport, onViewChange, onAd
   }
 
   // Fetch game logs from API
-  const fetchGameLogs = async (playerId: string, season: number) => {
+  const fetchGameLogs = async (playerId: string) => {
     setGameLogsLoading(true)
     try {
-      const response = await fetch(`/api/nfl/game-logs?playerId=${playerId}&season=${season}`)
+      const response = await fetch(`/api/nfl/game-logs?playerId=${playerId}`)
       if (!response.ok) {
         throw new Error('Failed to fetch game logs')
       }
       const data = await response.json()
       
-      // Separate regular season and playoffs
-      const regularSeason = data.gameLogs.filter((game: any) => game.seasonType === 'REG')
-      const playoffs = data.gameLogs.filter((game: any) => game.seasonType === 'POST')
+      // Store raw game logs for betslip processing
+      setRawGameLogs(data.gameLogs || [])
+      
+      // Filter by selected season and separate regular season and playoffs
+      const seasonGames = data.gameLogs.filter((game: any) => game.season === selectedSeason)
+      const regularSeason = seasonGames.filter((game: any) => game.seasonType === 'REG')
+      const playoffs = seasonGames.filter((game: any) => game.seasonType === 'POST')
       
       // Transform API data to match UI expectations
       const transformGame = (game: any) => {
@@ -173,12 +178,63 @@ export function DashboardContent({ currentView, currentSport, onViewChange, onAd
     }
   }
 
-  // Fetch game logs when player or season changes
+  // Fetch game logs when player changes
   useEffect(() => {
     if (expandedPlayer && expandedPlayer.player_id) {
-      fetchGameLogs(expandedPlayer.player_id, selectedSeason)
+      fetchGameLogs(expandedPlayer.player_id)
     }
-  }, [expandedPlayer, selectedSeason])
+  }, [expandedPlayer])
+
+  // Refilter game logs when season changes
+  useEffect(() => {
+    if (expandedPlayer && expandedPlayer.player_id && rawGameLogs.length > 0) {
+      // Filter by selected season and separate regular season and playoffs
+      const seasonGames = rawGameLogs.filter((game: any) => game.season === selectedSeason)
+      const regularSeason = seasonGames.filter((game: any) => game.seasonType === 'REG')
+      const playoffs = seasonGames.filter((game: any) => game.seasonType === 'POST')
+      
+      // Transform API data to match UI expectations
+      const transformGame = (game: any) => {
+        const opponentTeam = getTeamByAbbr(game.opponent)
+        return {
+          date: `Week ${game.week}`,
+          opponent: game.opponent,
+          opponentLogo: opponentTeam?.team_logo_espn || '',
+          result: game.gameResult || "N/A",
+          seasonType: game.seasonType,
+          passing: {
+            cmp: game.completions,
+            att: game.attempts,
+            yds: game.passingYards,
+            cmp_pct: game.attempts > 0 ? ((game.completions / game.attempts) * 100).toFixed(1) : 0,
+            avg: game.attempts > 0 ? (game.passingYards / game.attempts).toFixed(1) : 0,
+            td: game.passingTds,
+            int: game.interceptions,
+            sack: game.sacks
+          },
+          rushing: {
+            car: game.carries,
+            yds: game.rushingYards,
+            avg: game.carries > 0 ? (game.rushingYards / game.carries).toFixed(1) : 0,
+            td: game.rushingTds
+          },
+          receiving: {
+            rec: game.receptions,
+            yds: game.receivingYards,
+            avg: game.receptions > 0 ? (game.receivingYards / game.receptions).toFixed(1) : 0,
+            td: game.receivingTds
+          }
+        }
+      }
+      
+      const transformedLogs = [
+        ...regularSeason.map(transformGame),
+        ...(playoffs.length > 0 ? [{ isPlayoffHeader: true }, ...playoffs.map(transformGame)] : [])
+      ]
+      
+      setGameLogs(transformedLogs)
+    }
+  }, [selectedSeason, rawGameLogs, expandedPlayer])
 
 
 
@@ -288,128 +344,83 @@ export function DashboardContent({ currentView, currentSport, onViewChange, onAd
   }
 
   // Handle adding prop to betslip
-  const handleAddProp = async (player: any, prop: any) => {
+  const handleAddProp = (player: any, prop: any) => {
     if (!onAddLine) return
     
-    try {
-      // Fetch player data to get prop statistics
-      const response = await fetch(`/api/nfl/game-logs?playerId=${player.player_id}&season=2024`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch player data')
-      }
-      const data = await response.json()
-      
-      // Get prop statistics from the API response
-      const propStats = data.propStats?.[prop.type]
-      let defaultValue = "0.5"
-      
-      // Transform game logs to extract the correct value based on prop type
-      const transformGameLogs = (gameLogs: any[], propType: string) => {
-        return gameLogs.map(game => {
-          let value = 0
-          switch (propType) {
-            case 'passing_yards':
-              value = game.passingYards || 0
-              break
-            case 'passing_td':
-              value = game.passingTds || 0
-              break
-            case 'rushing_yards':
-              value = game.rushingYards || 0
-              break
-            case 'rushing_td':
-              value = game.rushingTds || 0
-              break
-            case 'completions':
-              value = game.completions || 0
-              break
-            case 'attempts':
-              value = game.attempts || 0
-              break
-            case 'interceptions':
-              value = game.interceptions || 0
-              break
-            case 'sacks':
-              value = game.sacks || 0
-              break
-            case 'receiving_yards':
-              value = game.receivingYards || 0
-              break
-            case 'receiving_td':
-              value = game.receivingTds || 0
-              break
-            case 'receptions':
-              value = game.receptions || 0
-              break
-            case 'targets':
-              value = game.targets || 0
-              break
-            case 'total_yards':
-              value = (game.passingYards || 0) + (game.rushingYards || 0)
-              break
-            case 'total_td':
-              value = (game.passingTds || 0) + (game.rushingTds || 0)
-              break
-            default:
-              value = 0
-          }
-          return {
-            week: game.week,
-            value: value,
-            season: game.season
-          }
-        })
-      }
-      
-      if (propStats) {
-        // Use real data for defaults
-        defaultValue = propStats.average.toString()
-      } else {
-        // Fallback to reasonable defaults based on prop type
-        if (prop.type.includes("yards")) {
-          defaultValue = "50.5"
-        } else if (prop.type.includes("td")) {
-          defaultValue = "0.5"
-        } else if (prop.type.includes("completions") || prop.type.includes("receptions")) {
-          defaultValue = "3.5"
-        } else if (prop.type.includes("attempts")) {
-          defaultValue = "25.5"
+    // Transform game logs to extract the correct value based on prop type
+    const transformGameLogs = (gameLogs: any[], propType: string) => {
+      return gameLogs.map(game => {
+        let value = 0
+        switch (propType) {
+          case 'passing_yards':
+            value = game.passingYards || 0
+            break
+          case 'passing_td':
+            value = game.passingTds || 0
+            break
+          case 'rushing_yards':
+            value = game.rushingYards || 0
+            break
+          case 'rushing_td':
+            value = game.rushingTds || 0
+            break
+          case 'completions':
+            value = game.completions || 0
+            break
+          case 'attempts':
+            value = game.attempts || 0
+            break
+          case 'interceptions':
+            value = game.interceptions || 0
+            break
+          case 'sacks':
+            value = game.sacks || 0
+            break
+          case 'receiving_yards':
+            value = game.receivingYards || 0
+            break
+          case 'receiving_td':
+            value = game.receivingTds || 0
+            break
+          case 'receptions':
+            value = game.receptions || 0
+            break
+          case 'targets':
+            value = game.targets || 0
+            break
+          case 'total_yards':
+            value = (game.passingYards || 0) + (game.rushingYards || 0)
+            break
+          case 'total_td':
+            value = (game.passingTds || 0) + (game.rushingTds || 0)
+            break
+          default:
+            value = 0
         }
-      }
-      
-      onAddLine({
-        player: player.player_name,
-        prop: prop.label,
-        propType: prop.type,
-        value: defaultValue,
-        overUnder: "over",
-        propData: propStats,
-        gameLogData: transformGameLogs(data.gameLogs || [], prop.type)
-      })
-    } catch (error) {
-      console.error('Error fetching player data:', error)
-      
-      // Fallback to basic data if API fails
-      let defaultValue = "0.5"
-      if (prop.type.includes("yards")) {
-        defaultValue = "50.5"
-      } else if (prop.type.includes("td")) {
-        defaultValue = "0.5"
-      } else if (prop.type.includes("completions") || prop.type.includes("receptions")) {
-        defaultValue = "3.5"
-      } else if (prop.type.includes("attempts")) {
-        defaultValue = "25.5"
-      }
-      
-      onAddLine({
-        player: player.player_name,
-        prop: prop.label,
-        propType: prop.type,
-        value: defaultValue,
-        overUnder: "over",
-        gameLogData: []
+        return {
+          week: game.week,
+          value: value,
+          season: game.season
+        }
       })
     }
+    
+    // Calculate basic stats for default value
+    const values = transformGameLogs(rawGameLogs, prop.type)
+      .map(game => game.value)
+      .filter(val => val > 0) // Only include games where the player played
+    
+    const average = values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0
+    const defaultValue = average > 0 ? (Math.floor(average) + 0.5).toString() : "0.5"
+    
+    onAddLine({
+      player: player.player_name,
+      prop: prop.label,
+      propType: prop.type,
+      value: defaultValue,
+      overUnder: "over",
+      gameLogData: transformGameLogs(rawGameLogs, prop.type)
+    })
   }
 
   if (currentView === "games") {

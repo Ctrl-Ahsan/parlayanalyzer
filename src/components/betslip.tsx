@@ -17,9 +17,9 @@ interface BetLine {
   propType: string
   value: string
   overUnder: "over" | "under"
-  hitRate: number
-  totalGames: number
-  hits: number
+  hitRate?: number
+  totalGames?: number
+  hits?: number
   propData?: {
     high: number
     low: number
@@ -51,7 +51,7 @@ export function Betslip({ lines, onRemoveLine, onClearAll, onAddLine, onUpdateLi
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>("2024")
 
   const totalHitRate = lines.length > 0 
-    ? lines.reduce((sum, line) => sum + line.hitRate, 0) / lines.length 
+    ? lines.reduce((sum, line) => sum + (line.hitRate || 0), 0) / lines.length 
     : 0
 
   // Function to calculate hit rate based on prop value and over/under
@@ -248,6 +248,28 @@ export function Betslip({ lines, onRemoveLine, onClearAll, onAddLine, onUpdateLi
       }
     }
     
+    // Calculate prop data from game logs if available
+    if (line.gameLogData) {
+      const filteredGames = filterGamesByTimeFrame(line.gameLogData, selectedTimeFrame)
+      const values = filteredGames.map(game => game.value).filter(val => val > 0)
+      
+      if (values.length > 0) {
+        const sorted = values.sort((a, b) => a - b)
+        const high = Math.max(...values)
+        const low = Math.min(...values)
+        const average = values.reduce((sum, val) => sum + val, 0) / values.length
+        const median = sorted[Math.floor(sorted.length / 2)]
+        
+        return {
+          high,
+          low,
+          average: Math.round(average * 10) / 10,
+          median: Math.round(median * 10) / 10,
+          current: parseFloat(line.value)
+        }
+      }
+    }
+    
     // Fallback to mock data if no real data available
     const value = parseFloat(line.value)
     return {
@@ -266,7 +288,7 @@ export function Betslip({ lines, onRemoveLine, onClearAll, onAddLine, onUpdateLi
     // Calculate current hit rate if we have game log data
     const currentHitRate = line.gameLogData 
       ? calculateHitRate(line.gameLogData, parseFloat(line.value), line.overUnder, selectedTimeFrame)
-      : { hitRate: line.hitRate, hits: line.hits, totalGames: line.totalGames }
+      : { hitRate: line.hitRate || 0, hits: line.hits || 0, totalGames: line.totalGames || 0 }
     
     return (
       <div key={line.id} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
