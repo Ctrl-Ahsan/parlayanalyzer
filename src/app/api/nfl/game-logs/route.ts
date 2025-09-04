@@ -63,93 +63,10 @@ export async function GET(request: NextRequest) {
       fantasyPointsPpr: game.fantasy_points_ppr || 0,
     })) || [];
 
-    // Calculate prop-specific statistics
-    const calculatePropStats = (propType: string) => {
-      const values = gameLogs.map(game => {
-        switch (propType) {
-          case 'passing_yards':
-            return game.passingYards;
-          case 'passing_td':
-            return game.passingTds;
-          case 'rushing_yards':
-            return game.rushingYards;
-          case 'rushing_td':
-            return game.rushingTds;
-          case 'completions':
-            return game.completions;
-          case 'attempts':
-            return game.attempts;
-          case 'interceptions':
-            return game.interceptions;
-          case 'sacks':
-            return game.sacks;
-          case 'receiving_yards':
-            return game.receivingYards;
-          case 'receiving_td':
-            return game.receivingTds;
-          case 'receptions':
-            return game.receptions;
-          case 'targets':
-            return game.targets;
-          case 'total_yards':
-            return game.passingYards + game.rushingYards;
-          case 'total_td':
-            return game.passingTds + game.rushingTds;
-          default:
-            return 0;
-        }
-      }).filter(val => val > 0); // Only include games where the player played
-
-      if (values.length === 0) {
-        return {
-          high: 0,
-          low: 0,
-          average: 0,
-          median: 0,
-          totalGames: 0,
-          hitRate: 0
-        };
-      }
-
-      const sorted = values.sort((a, b) => a - b);
-      const high = Math.max(...values);
-      const low = Math.min(...values);
-      const average = values.reduce((sum, val) => sum + val, 0) / values.length;
-      const median = sorted[Math.floor(sorted.length / 2)];
-
-      return {
-        high,
-        low,
-        average: Math.round(average * 10) / 10,
-        median: Math.round(median * 10) / 10,
-        totalGames: values.length,
-        hitRate: 50 // Default hit rate - will be calculated based on prop value
-      };
-    };
-
-    // Calculate stats for all prop types
-    const propStats = {
-      passing_yards: calculatePropStats('passing_yards'),
-      passing_td: calculatePropStats('passing_td'),
-      rushing_yards: calculatePropStats('rushing_yards'),
-      rushing_td: calculatePropStats('rushing_td'),
-      completions: calculatePropStats('completions'),
-      attempts: calculatePropStats('attempts'),
-      interceptions: calculatePropStats('interceptions'),
-      sacks: calculatePropStats('sacks'),
-      receiving_yards: calculatePropStats('receiving_yards'),
-      receiving_td: calculatePropStats('receiving_td'),
-      receptions: calculatePropStats('receptions'),
-      targets: calculatePropStats('targets'),
-      total_yards: calculatePropStats('total_yards'),
-      total_td: calculatePropStats('total_td'),
-    };
-
     return NextResponse.json({
       playerId,
       season: parseInt(season),
       gameLogs,
-      propStats,
       total: gameLogs.length
     });
 

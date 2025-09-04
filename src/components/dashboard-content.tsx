@@ -5,19 +5,21 @@ import { Plus } from "lucide-react"
 import { teams } from "@/lib/data/teams"
 import { rosters } from "@/lib/data/rosters"
 import { useState, useEffect } from "react"
+import { SecondaryNav } from "@/components/secondary-nav"
 
 interface DashboardContentProps {
   currentView: string
   currentSport: string
+  onViewChange: (view: string) => void
   onAddLine?: (line: {
     player: string
     prop: string
     propType: string
     value: string
     overUnder: "over" | "under"
-    hitRate: number
-    totalGames: number
-    hits: number
+    hitRate?: number
+    totalGames?: number
+    hits?: number
     propData?: {
       high: number
       low: number
@@ -26,6 +28,11 @@ interface DashboardContentProps {
       totalGames: number
       hitRate: number
     }
+    gameLogData?: Array<{
+      week: number
+      value: number
+      season: number
+    }>
   }) => void
   betLines?: Array<{
     id: string
@@ -34,9 +41,9 @@ interface DashboardContentProps {
     propType: string
     value: string
     overUnder: "over" | "under"
-    hitRate: number
-    totalGames: number
-    hits: number
+    hitRate?: number
+    totalGames?: number
+    hits?: number
     propData?: {
       high: number
       low: number
@@ -45,10 +52,15 @@ interface DashboardContentProps {
       totalGames: number
       hitRate: number
     }
+    gameLogData?: Array<{
+      week: number
+      value: number
+      season: number
+    }>
   }>
 }
 
-export function DashboardContent({ currentView, currentSport, onAddLine, betLines = [] }: DashboardContentProps) {
+export function DashboardContent({ currentView, currentSport, onViewChange, onAddLine, betLines = [] }: DashboardContentProps) {
   const [selectedTeam, setSelectedTeam] = useState<any>(null)
   const [showPlayers, setShowPlayers] = useState(false)
   const [expandedPlayer, setExpandedPlayer] = useState<any>(null)
@@ -290,16 +302,68 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
       // Get prop statistics from the API response
       const propStats = data.propStats?.[prop.type]
       let defaultValue = "0.5"
-      let hitRate = 50.0
-      let totalGames = 17
-      let hits = 8
+      
+      // Transform game logs to extract the correct value based on prop type
+      const transformGameLogs = (gameLogs: any[], propType: string) => {
+        return gameLogs.map(game => {
+          let value = 0
+          switch (propType) {
+            case 'passing_yards':
+              value = game.passingYards || 0
+              break
+            case 'passing_td':
+              value = game.passingTds || 0
+              break
+            case 'rushing_yards':
+              value = game.rushingYards || 0
+              break
+            case 'rushing_td':
+              value = game.rushingTds || 0
+              break
+            case 'completions':
+              value = game.completions || 0
+              break
+            case 'attempts':
+              value = game.attempts || 0
+              break
+            case 'interceptions':
+              value = game.interceptions || 0
+              break
+            case 'sacks':
+              value = game.sacks || 0
+              break
+            case 'receiving_yards':
+              value = game.receivingYards || 0
+              break
+            case 'receiving_td':
+              value = game.receivingTds || 0
+              break
+            case 'receptions':
+              value = game.receptions || 0
+              break
+            case 'targets':
+              value = game.targets || 0
+              break
+            case 'total_yards':
+              value = (game.passingYards || 0) + (game.rushingYards || 0)
+              break
+            case 'total_td':
+              value = (game.passingTds || 0) + (game.rushingTds || 0)
+              break
+            default:
+              value = 0
+          }
+          return {
+            week: game.week,
+            value: value,
+            season: game.season
+          }
+        })
+      }
       
       if (propStats) {
         // Use real data for defaults
         defaultValue = propStats.average.toString()
-        totalGames = propStats.totalGames
-        hitRate = 50.0 // Will be calculated based on prop value
-        hits = Math.floor(totalGames / 2)
       } else {
         // Fallback to reasonable defaults based on prop type
         if (prop.type.includes("yards")) {
@@ -319,10 +383,8 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
         propType: prop.type,
         value: defaultValue,
         overUnder: "over",
-        hitRate,
-        totalGames,
-        hits,
-        propData: propStats
+        propData: propStats,
+        gameLogData: transformGameLogs(data.gameLogs || [], prop.type)
       })
     } catch (error) {
       console.error('Error fetching player data:', error)
@@ -345,16 +407,21 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
         propType: prop.type,
         value: defaultValue,
         overUnder: "over",
-        hitRate: 50.0,
-        totalGames: 17,
-        hits: 8
+        gameLogData: []
       })
     }
   }
 
   if (currentView === "games") {
     return (
-      <div className="p-6">
+      <div className="min-h-screen bg-gray-50">
+        {/* Secondary Navigation */}
+        <SecondaryNav 
+          currentView={currentView}
+          onViewChange={onViewChange}
+        />
+        
+        <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Upcoming Games</h2>
           <p className="text-gray-600">Select a game to view available props</p>
@@ -396,6 +463,7 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
           ))}
         </div>
       </div>
+      </div>
     )
   }
 
@@ -405,7 +473,14 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
       const propButtons = getPropButtons(expandedPlayer)
 
       return (
-        <div className="p-6">
+        <div className="min-h-screen bg-gray-50">
+          {/* Secondary Navigation */}
+          <SecondaryNav 
+            currentView={currentView}
+            onViewChange={onViewChange}
+          />
+          
+          <div className="p-6">
           {/* Header with back button */}
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -664,6 +739,7 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
             </div>
           </div>
         </div>
+      </div>
       )
     }
 
@@ -673,7 +749,14 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
       const groupedPlayers = groupPlayersByPosition(teamPlayers)
 
       return (
-        <div className="p-6">
+        <div className="min-h-screen bg-gray-50">
+          {/* Secondary Navigation */}
+          <SecondaryNav 
+            currentView={currentView}
+            onViewChange={onViewChange}
+          />
+          
+          <div className="p-6">
           {/* Header with back button */}
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -755,6 +838,7 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
             </div>
           ))}
         </div>
+      </div>
       )
     }
 
@@ -766,7 +850,14 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
         : teams // Show all teams if "all" is selected
 
     return (
-      <div className="p-6">
+      <div className="min-h-screen bg-gray-50">
+        {/* Secondary Navigation */}
+        <SecondaryNav 
+          currentView={currentView}
+          onViewChange={onViewChange}
+        />
+        
+        <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">NFL Teams</h2>
         </div>
@@ -1080,12 +1171,20 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
           </>
         )}
       </div>
+      </div>
     )
   }
 
   if (currentView === "players") {
     return (
-      <div className="p-6">
+      <div className="min-h-screen bg-gray-50">
+        {/* Secondary Navigation */}
+        <SecondaryNav 
+          currentView={currentView}
+          onViewChange={onViewChange}
+        />
+        
+        <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Players</h2>
           <p className="text-gray-600">Search and analyze individual players</p>
@@ -1114,6 +1213,7 @@ export function DashboardContent({ currentView, currentSport, onAddLine, betLine
             </div>
           ))}
         </div>
+      </div>
       </div>
     )
   }

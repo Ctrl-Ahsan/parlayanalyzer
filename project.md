@@ -35,6 +35,8 @@ The Parlay Analyzer is a specialized sports betting application designed for cas
 - ✅ **Game Logs Table**: ESPN-style game log display with position-specific stats and color-coded performance metrics
 - ✅ **Real Data Integration**: Game logs connected to Supabase database with live player performance data
 - ✅ **Betslip Functionality**: Complete prop-to-betslip integration with compact design and real-time data
+- ✅ **Visual Hit Rate Counters**: Circular progress bars showing hit rates with color-coded performance (red/yellow/green)
+- ✅ **Dynamic Hit Rate Calculations**: Real-time hit rate updates based on time frame selection and prop value adjustments
 
 ## Project Structure
 ```
@@ -92,6 +94,8 @@ SUPABASE_ANON_KEY
 - **Performance Range Visualization**: Static performance markers (high/low/average) using real player statistics
 - **Real Data Storage**: Comprehensive player and prop data stored in betslip for analysis
 - **Time Frame Filtering**: Support for different time periods (L5, L10, L20, 2024, 2025) for data analysis
+- **Visual Hit Rate Counters**: Circular progress bars displaying hit counts (X/Y format) with color-coded performance thresholds
+- **Dynamic Hit Rate Updates**: Real-time recalculation of hit rates when changing time frames, prop values, or over/under selection
 
 ### Teams View Features
 - **Conference Organization**: AFC and NFC sections with official conference logos

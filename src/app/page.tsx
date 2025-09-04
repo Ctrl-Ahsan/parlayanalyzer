@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Navigation } from "@/components/navigation"
-import { SecondaryNav } from "@/components/secondary-nav"
 import { DashboardContent } from "@/components/dashboard-content"
 import { Betslip } from "@/components/betslip"
 
@@ -27,6 +26,11 @@ export default function Home() {
       totalGames: number
       hitRate: number
     }
+    gameLogData?: Array<{
+      week: number
+      value: number
+      season: number
+    }>
   }>>([])
 
   const handleRemoveLine = (id: string) => {
@@ -54,6 +58,11 @@ export default function Home() {
       totalGames: number
       hitRate: number
     }
+    gameLogData?: Array<{
+      week: number
+      value: number
+      season: number
+    }>
   }) => {
     const id = Date.now().toString() // Simple ID generation
     setBetLines(lines => [...lines, { ...newLine, id }])
@@ -76,6 +85,11 @@ export default function Home() {
       totalGames: number
       hitRate: number
     }
+    gameLogData?: Array<{
+      week: number
+      value: number
+      season: number
+    }>
   }>) => {
     setBetLines(lines => 
       lines.map(line => 
@@ -92,12 +106,6 @@ export default function Home() {
         onSportChange={setCurrentSport}
       />
 
-      {/* Secondary Navigation */}
-      <SecondaryNav 
-        currentView={currentView}
-        onViewChange={setCurrentView}
-      />
-
       {/* Main Content Area */}
       <div className="flex">
         {/* Dashboard Content */}
@@ -105,6 +113,7 @@ export default function Home() {
           <DashboardContent 
             currentView={currentView}
             currentSport={currentSport}
+            onViewChange={setCurrentView}
             onAddLine={handleAddLine}
             betLines={betLines}
           />
